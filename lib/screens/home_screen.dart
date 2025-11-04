@@ -26,19 +26,85 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _actualizarTarea(Tarea tarea, bool valor) async {
+    try {
+      await api.updateTarea(tarea.id, valor);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(' Tarea "${tarea.titulo}" actualizada'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      refrescar();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(' Error al actualizar: $e'),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _eliminarTarea(Tarea tarea) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: Text('¿Seguro que quieres eliminar "${tarea.titulo}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      try {
+        await api.deleteTarea(tarea.id);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(' Tarea "${tarea.titulo}" eliminada'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        refrescar();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar: $e'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF0F5),
       appBar: AppBar(
-        title: const Text('🍓 Mis Tareas con API'),
+        title: const Text('🍓 TO DO - Task'),
         backgroundColor: const Color(0xFFFF80AB),
       ),
       body: FutureBuilder<List<Tarea>>(
         future: tareas,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.pink));
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.pink),
+            );
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
@@ -52,9 +118,20 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: lista.length,
             itemBuilder: (context, index) {
               final tarea = lista[index];
-              return Card(
-                color: tarea.completada ? Colors.pink[100] : Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: tarea.completada ? Colors.pink[100] : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(2, 2),
+                    ),
+                  ],
+                ),
                 child: ListTile(
                   title: Text(
                     tarea.titulo,
@@ -66,17 +143,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   leading: Checkbox(
                     activeColor: Colors.pinkAccent,
                     value: tarea.completada,
-                    onChanged: (val) async {
-                      await api.updateTarea(tarea.id, val!);
-                      refrescar();
+                    onChanged: (val) {
+                      _actualizarTarea(tarea, val!);
                     },
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () async {
-                      await api.deleteTarea(tarea.id);
-                      refrescar();
-                    },
+                    onPressed: () => _eliminarTarea(tarea),
                   ),
                 ),
               );
