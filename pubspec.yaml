@@ -1,0 +1,35 @@
+name: examen1
+description: "Aplicación Flutter - CRUD con API DummyJSON (Administrador de Tareas)"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # 🔹 Dependencia para consumir APIs REST
+  http: ^1.2.0
+
+  # 🔹 Manejo de estado simple con Provider
+  provider: ^6.1.2
+
+  # 🔹 Base de datos local SQLite
+  sqflite: ^2.3.3
+
+  # 🔹 Manejo de rutas de archivos
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
